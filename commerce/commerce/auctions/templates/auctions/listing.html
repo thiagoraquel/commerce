@@ -1,0 +1,26 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Listing: {{ listing.title }}</h2>
+
+    {% if listing.image_url %}
+        <img src="{{ listing.image_url }}" alt="{{ listing.title }}" style="max-height: 400px;">
+    {% endif %}
+
+    <p>{{ listing.description }}</p>
+    
+    <h3>Price: ${{ listing.starting_bid }}</h3>
+
+    <ul>
+        <li><strong>Owner:</strong> {{ listing.owner }}</li>
+        <li><strong>Category:</strong> {{ listing.category|default:"No Category Listed" }}</li>
+        <li><strong>Status:</strong> {% if listing.is_active %} Active {% else %} Closed {% endif %}</li>
+    </ul>
+
+    <hr>
+    <div>
+        {% if user.is_authenticated %}
+            {% endif %}
+    </div>
+
+{% endblock %}
