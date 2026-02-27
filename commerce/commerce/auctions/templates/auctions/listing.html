@@ -20,7 +20,15 @@
     <hr>
     <div>
         {% if user.is_authenticated %}
-            {% endif %}
+            <form action="{% url 'toggle_watchlist' listing.id %}" method="post">
+                {% csrf_token %}
+                {% if user in listing.watchlist.all %}
+                    <button type="submit" class="btn btn-danger">Remove from Watchlist</button>
+                {% else %}
+                    <button type="submit" class="btn btn-success">Add to Watchlist</button>
+                {% endif %}
+            </form>
+        {% endif %}
     </div>
 
 {% endblock %}

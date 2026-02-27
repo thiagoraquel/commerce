@@ -96,3 +96,11 @@ def listing_page(request, listing_id):
     return render(request, "auctions/listing.html", {
         "listing": listing
     })
+
+def toggle_watchlist(request, listing_id):
+    listing = get_object_or_404(AuctionListing, pk=listing_id)
+    if request.user in listing.watchlist.all():
+        listing.watchlist.remove(request.user)
+    else:
+        listing.watchlist.add(request.user)
+    return redirect("listing_page", listing_id=listing_id)
