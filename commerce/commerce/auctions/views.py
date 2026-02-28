@@ -104,3 +104,15 @@ def toggle_watchlist(request, listing_id):
     else:
         listing.watchlist.add(request.user)
     return redirect("listing_page", listing_id=listing_id)
+
+def watchlist(request):
+    # Se não estiver logado, redireciona para login
+    if not request.user.is_authenticated:
+        return redirect("login")
+    
+    # Filtra as listagens onde o usuário atual está presente no campo watchlist
+    user_watchlist = request.user.watchlist_items.all()
+    
+    return render(request, "auctions/watchlist.html", {
+        "listings": user_watchlist
+    })
