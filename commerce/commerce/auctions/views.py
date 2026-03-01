@@ -3,13 +3,18 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.db.models import Max
+from django.db.models.functions import Coalesce
 
-from .models import User, AuctionListing
+from .models import User, AuctionListing, Bid
 from .forms import ListingForm
 
 def index(request):
-# Buscamos apenas as listagens que estão marcadas como ativas
-    listings = AuctionListing.objects.filter(is_active=True)
+# Buscamos as listagens e "anotamos" o valor do maior lance.
+    # Se o maior lance for nulo (None), o Coalesce usa o 'starting_bid'.
+    listings = AuctionListing.objects.filter(is_active=True).annotate(
+        current_price=Coalesce(Max('bids__amount'), 'starting_bid')
+    )
     
     return render(request, "auctions/index.html", {
         "listings": listings
@@ -90,11 +95,16 @@ def create_listing(request):
     })
 
 def listing_page(request, listing_id):
-    # Busca o item pelo ID ou retorna erro 404 se não achar
     listing = get_object_or_404(AuctionListing, pk=listing_id)
     
+    # Buscamos o maior lance aqui na View
+    current_bid = listing.bids.order_by('-amount').first()
+    # Se existir lance, o preço é o valor do lance. Se não, é o preço inicial.
+    current_price = current_bid.amount if current_bid else listing.starting_bid
+
     return render(request, "auctions/listing.html", {
-        "listing": listing
+        "listing": listing,
+        "current_price": current_price
     })
 
 def toggle_watchlist(request, listing_id):
@@ -116,3 +126,27 @@ def watchlist(request):
     return render(request, "auctions/watchlist.html", {
         "listings": user_watchlist
     })
+
+def place_bid(request, listing_id):
+    if request.method == "POST":
+        listing = get_object_or_404(AuctionListing, pk=listing_id)
+        bid_amount = float(request.POST["bid_amount"])
+        
+        # Lógica de validação:
+        # 1. Buscar o maior lance atual (se houver)
+        current_bid = listing.bids.order_by('-amount').first()
+        min_required = current_bid.amount if current_bid else listing.starting_bid
+
+        if bid_amount > min_required:
+            # Salva o novo lance
+            new_bid = Bid(amount=bid_amount, user=request.user, listing=listing)
+            new_bid.save()
+            return redirect("listing_page", listing_id=listing_id)
+        else:
+            # Se o lance for baixo demais, você pode passar uma mensagem de erro
+            return render(request, "auctions/listing.html", {
+                "listing": listing,
+                "error": "Bid must be higher than current price.",
+                "current_price": min_required
+
+            })

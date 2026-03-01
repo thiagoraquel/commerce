@@ -9,7 +9,20 @@
 
     <p>{{ listing.description }}</p>
     
-    <h3>Price: ${{ listing.starting_bid }}</h3>
+    <hr>
+    <h4>Current Price: ${{ current_price }}</h4>
+    
+    {% if user.is_authenticated %}
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        
+        <form action="{% url 'place_bid' listing.id %}" method="post">
+            {% csrf_token %}
+            <input type="number" name="bid_amount" step="0.01" placeholder="Bid Amount">
+            <button type="submit" class="btn btn-primary">Place Bid</button>
+        </form>
+    {% endif %}
 
     <ul>
         <li><strong>Owner:</strong> {{ listing.owner }}</li>

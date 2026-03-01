@@ -22,6 +22,9 @@ class Bid(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bids")
     listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="bids")
 
+    def __str__(self):
+        return f"${self.amount} by {self.user}"
+
 class Comment(models.Model):
     content = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
