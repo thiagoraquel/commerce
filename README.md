@@ -28,4 +28,4 @@ An e-commerce auction site where users can create listings, place bids, and mana
     python manage.py migrate
 
 5. **Start the Server:**
-    python manage.py runserver
+    python manage.py runserver ok
