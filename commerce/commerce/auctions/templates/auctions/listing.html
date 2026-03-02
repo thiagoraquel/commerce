@@ -27,7 +27,27 @@
     <ul>
         <li><strong>Owner:</strong> {{ listing.owner }}</li>
         <li><strong>Category:</strong> {{ listing.category|default:"No Category Listed" }}</li>
-        <li><strong>Status:</strong> {% if listing.is_active %} Active {% else %} Closed {% endif %}</li>
+        <li><strong>Status:</strong> 
+            {% if listing.is_active %}
+                {% if user == listing.owner %}
+                    <form action="{% url 'close_auction' listing.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning">Close Auction</button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    This auction is closed. 
+                    {% if winner == user %}
+                        <strong>Congratulations! You won this auction!</strong>
+                    {% elif winner %}
+                        <strong>Winner: {{ winner.username }}</strong>
+                    {% else %}
+                        <strong>No bids were placed.</strong>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </li>
     </ul>
 
     <hr>

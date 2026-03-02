@@ -97,14 +97,19 @@ def create_listing(request):
 def listing_page(request, listing_id):
     listing = get_object_or_404(AuctionListing, pk=listing_id)
     
-    # Buscamos o maior lance aqui na View
+    # Busca o maior lance atual
     current_bid = listing.bids.order_by('-amount').first()
-    # Se existir lance, o preço é o valor do lance. Se não, é o preço inicial.
+    
+    # Define o preço atual
     current_price = current_bid.amount if current_bid else listing.starting_bid
+    
+    # Descobre quem é o vencedor (o usuário do maior lance)
+    winner = current_bid.user if current_bid else None
 
     return render(request, "auctions/listing.html", {
         "listing": listing,
-        "current_price": current_price
+        "current_price": current_price,
+        "winner": winner  # Passamos o objeto do usuário vencedor
     })
 
 def toggle_watchlist(request, listing_id):
@@ -150,3 +155,14 @@ def place_bid(request, listing_id):
                 "current_price": min_required
 
             })
+        
+def close_auction(request, listing_id):
+    listing = get_object_or_404(AuctionListing, pk=listing_id)
+    
+    # Segurança: Apenas o dono pode fechar
+    if listing.owner == request.user:
+        listing.is_active = False
+        listing.save()
+        return redirect("listing_page", listing_id=listing_id)
+    else:
+        return redirect("index")
